@@ -1,0 +1,159 @@
+tinysoccer
+
+what is tiny soccer:
+
+        tiny soccer is a little game that's kinda like chess. you start off with
+        a certain amount of players. just like real soccer, the difference is,
+        you can only do 3 actions:
+
+            * move - this allows you to progress in the grid layout. you can
+            not move over 1 grid space.
+
+            * kick - this allows you to kick the ball if you are in bounds.
+            "in bounds" referring to being 0 grid spaces away from the ball
+
+            * pass - if you're in bound to the ball, this action will put the
+            ball in the same radius as your teammates
+
+        pre-dev notes:
+
+            you can't kick the ball to a space somebody is already in. that will
+            cause your ball to be set in the person who the ball hits
+
+the grid offset issue:
+
+        the reason all values have to be off by one (for example say you want to go to
+        (3,-3) in a 5x5, instead you'd go to (2,2)) is because of the maximum
+        the arrays can hold is 5, this looks weird visualized, but if you have
+        no visualization this can easily be fixed by setting the bounds to 6x6
+        instead of 5x5.
+
+        in attempts to fix this issue, adding indexes that are minus 1 their
+        actual value does not work. because at a certain point when the indexes
+        will be negative, it leads to some very unexpected results:
+
+            0 0 0 0 0 
+            0 1 0 0 0 
+            0 2 0 0 0 
+            0 0 0 0 257 
+            2 0 -1075053569 0 -1083377623       <- i dont remember the player
+            being negative one hundred and eight billion
+        
+        so one day ill work on a proper graph system, but until then just make
+        sure you offset all values by 1. and if you want to set points at the
+        ends of the grid, use the GRID_FAKE_MAX define, which is 1 less than the
+        GRID_BOUND define.
+
+        (there is a little temporary solution to this problem now)
+
+                To use "real" values, you can now use the real() function
+                defined in grid.h
+
+                    ppoint (&grid, real(5), real(0));
+                    bpoint (&grid, real(5), real(5));
+
+grid:
+
+        the grid simply works in 0, 1, and 2s.
+
+            0       -       no occupants in the space
+            1       -       a player
+            2       -       the ball
+
+        this grid is very simple but a tad buggy, because it is advertized to be
+        5x5, however, its actually 6x6 -> all of the values are capped at 5, you
+        can test this with dist(), notice how once a point goes to 5, the
+        distance is always 0. i didnt intend for it to be this way, yet another
+        crazy glitch within my terrible C codespace.
+
+        each grid looks something like this using C integer arrays:
+
+            0   0   0   0   0
+            0   0   0   0   0
+            0   0   0   0   0
+            0   0   0   0   0
+            0   0   0   0   0
+
+        makes zero sense right? well how about you look at the code that defines
+        the stuff for this array:
+
+            #define GRID_BOUND 6 /* grids will ALWAYS be even */
+
+            #define NONE 0
+            #define PLAYER 1
+            #define BALL 2
+        
+        the top define defines the bounds for the grid, the larger the grid
+        bound, the wider and taller the grid will be.
+
+        there are 3 different (current) values: NONE, PLAYER, and BALL
+
+        let's place a player in the center of the grid, using ppoint(), by the
+        way, do know all of these values are most likely offset by 1. i just
+        realized that as of writing this. find the reason in (the grid offset issue)
+
+            ppoint (&grid, 2, 2); (notice that there's no NEGATIVES, this is
+            system limitations, Y is technically -Y, but X is normal)
+
+        now our grid looks more like this:
+
+            0   0   0   0   0
+            0   0   0   0   0
+            0   0   1   0   0
+            0   0   0   0   0
+            0   0   0   0   0
+
+        and that one right there. that one right there; he's our player.
+
+        now let us place our ball. and do note that these point functions are
+        really calls to set() and setf(), both setting values in the grid using
+        x and y. they're basically the same thing.
+
+            void
+            bpoint (xygrid *field, int x, int y)
+            {
+                setf(field, x, y, BALL);
+            }
+
+        setf() takes 4 arguments: the grid, x, y, and the value to set that
+        place to. when you set the PLAYER object, you really used set() to set
+        the point (3, 3) to PLAYER, which is 1. Let's add a ball.
+
+        using bpoint() as shown above, that should be easy.
+        
+            bpoint (&grid, 2, 3);
+
+        and like so, we have our ball. at (3, 4)
+
+            0   0   0   0   0
+            0   0   0   0   0
+            0   0   1   0   0
+            0   0   2   0   0
+            0   0   0   0   0
+
+        now, this probably isn't how it looks in C, but, its something. and
+        thats how it's like, supposed to look i guess.
+
+        you can actually visualize these grids using the print_grid() function
+        that i decided to make. use it like so:
+
+            xygrid grid;
+
+            init (&grid);
+
+            ppoint (&grid, 2, 2);
+            bpoint (&grid, 2, 3);
+            
+            print_grid(&grid);
+
+license:
+
+        this is licensed under the ISC license , allowing no charge free
+        distribution of this project as long as copyright notices and
+        attributions are given.
+
+questinos:
+
+        questions? comments? why the hell did you write this? why is it so damn
+        terrible? email me!
+                <gkai70263@gmail.com>
